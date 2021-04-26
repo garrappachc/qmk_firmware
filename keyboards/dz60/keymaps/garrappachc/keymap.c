@@ -1,24 +1,42 @@
 #include QMK_KEYBOARD_H
 
-#define COLOR_LAYER_DEFAULT 0, 0
-#define COLOR_LAYER_1 127, 255
+#define COLOR_LAYER_DEFAULT_HUE 0
+#define COLOR_LAYER_DEFAULT_SAT 0
+
+#define COLOR_LAYER_1_HUE 106
+#define COLOR_LAYER_1_SAT 255
 
 #define COLOR_VALUE_LOW 128
 #define COLOR_VALUE_HIGH 192
 
+static bool color_overridden = false;
+static uint8_t hue = COLOR_LAYER_DEFAULT_HUE;
+static uint8_t sat = COLOR_LAYER_DEFAULT_SAT;
+static uint8_t val = COLOR_VALUE_LOW;
+
+static void update_rgblight(void) {
+    if (!color_overridden) {
+        rgblight_sethsv_noeeprom(hue, sat, val);
+    }
+}
+
 void keyboard_post_init_user(void) {
   rgblight_enable_noeeprom();
-  rgblight_sethsv(COLOR_LAYER_DEFAULT, COLOR_VALUE_LOW);
+  rgblight_sethsv(hue, sat, val);
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-    uint8_t val = rgblight_get_val();
     switch (get_highest_layer(state)) {
     case 1:
-        rgblight_sethsv_noeeprom(COLOR_LAYER_1, val);
+        hue = COLOR_LAYER_1_HUE;
+        sat = COLOR_LAYER_1_SAT;
+        update_rgblight();
         break;
+
     default:
-        rgblight_sethsv_noeeprom(COLOR_LAYER_DEFAULT, val);
+        hue = COLOR_LAYER_DEFAULT_HUE;
+        sat = COLOR_LAYER_DEFAULT_SAT;
+        update_rgblight();
         break;
     }
     return state;
@@ -27,13 +45,19 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case KC_LSFT: {
-            uint8_t hue = rgblight_get_hue();
-            uint8_t sat = rgblight_get_sat();
-            rgblight_sethsv_noeeprom(hue, sat, record->event.pressed ? COLOR_VALUE_HIGH : COLOR_VALUE_LOW);
+            val = record->event.pressed ? COLOR_VALUE_HIGH : COLOR_VALUE_LOW;
+            update_rgblight();
             return true;
         }
 
-        case
+        case KC_SPC:
+            color_overridden = record->event.pressed;
+            if (record->event.pressed) {
+                rgblight_sethsv_noeeprom(21, 255, COLOR_VALUE_HIGH);
+            } else {
+                update_rgblight();
+            }
+            return true;
 
         default:
         return true;
