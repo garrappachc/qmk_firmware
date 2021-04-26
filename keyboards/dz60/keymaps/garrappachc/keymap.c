@@ -44,22 +44,22 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
-        case KC_LSFT: {
-            val = record->event.pressed ? COLOR_VALUE_HIGH : COLOR_VALUE_LOW;
+    case KC_LSFT: {
+        val = record->event.pressed ? COLOR_VALUE_HIGH : COLOR_VALUE_LOW;
+        update_rgblight();
+        return true;
+    }
+
+    case KC_SPC:
+        color_overridden = record->event.pressed;
+        if (record->event.pressed) {
+            rgblight_sethsv_noeeprom(21, 255, COLOR_VALUE_HIGH);
+        } else {
             update_rgblight();
-            return true;
         }
+        return true;
 
-        case KC_SPC:
-            color_overridden = record->event.pressed;
-            if (record->event.pressed) {
-                rgblight_sethsv_noeeprom(21, 255, COLOR_VALUE_HIGH);
-            } else {
-                update_rgblight();
-            }
-            return true;
-
-        default:
+    default:
         return true;
     }
 }
